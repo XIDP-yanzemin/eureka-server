@@ -1,0 +1,93 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: 'demo'
+      MYSQL_ROOT_PASSWORD: '123456'
+    networks:
+      main:
+        aliases:
+          - mysql
+    ports:
+      - '3306:3306'
+    volumes:
+      - $PWD/data:/var/lib/mysql
+
+  eureka-server:
+    image: eureka
+    container_name: eureka
+    volumes:
+      - $PWD/data:/var/lib/file
+    ports:
+      - "8761:8761"
+    networks:
+      main:
+        aliases:
+          - eureka
+
+  user-service:
+    image: user-service
+    container_name: user-service
+    volumes:
+      - $PWD/data:/var/lib/file
+    ports:
+      - "8081:8081"
+    networks:
+      main:
+        aliases:
+          - user-service
+    depends_on:
+      - "config-server"
+      - "user-mysql"
+      - "eureka-server"
+
+  product-service:
+    image: product-service
+    container_name: product-service
+    volumes:
+      - $PWD/data:/var/lib/file
+    ports:
+      - "8080:8080"
+    networks:
+      main:
+        aliases:
+          - product-service
+    depends_on:
+      - "config-server"
+      - "product-mysql"
+      - "eureka-server"
+      - "user-service"
+
+  webapi-gateway:
+    image: webapi-gateway:V0
+    container_name: webapi-gateway
+    volumes:
+      - $PWD/data:/var/lib/file
+    ports:
+      - "9000:9000"
+    networks:
+      main:
+        aliases:
+          - gateway
+    depends_on:
+      - "eureka-server"
+
+  config-server:
+    image: config-server
+    container_name: config-server
+    volumes:
+      - $PWD/data:/var/lib/file
+    ports:
+      - "9006:9006"
+    networks:
+      main:
+        aliases:
+          - config-server
+    depends_on:
+      - "eureka-server"
+networks:
+  main:
+
