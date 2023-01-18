@@ -5,7 +5,6 @@ services:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_DATABASE: 'demo'
       MYSQL_ROOT_PASSWORD: '123456'
     networks:
       main:
@@ -13,14 +12,11 @@ services:
           - mysql
     ports:
       - '3306:3306'
-    volumes:
-      - $PWD/data:/var/lib/mysql
+    privileged: true
 
   eureka-server:
-    image: eureka
+    image: yanzemin/eureka:v0
     container_name: eureka
-    volumes:
-      - $PWD/data:/var/lib/file
     ports:
       - "8761:8761"
     networks:
@@ -29,10 +25,8 @@ services:
           - eureka
 
   user-service:
-    image: user-service
+    image: yanzemin/user-service:v0
     container_name: user-service
-    volumes:
-      - $PWD/data:/var/lib/file
     ports:
       - "8081:8081"
     networks:
@@ -41,14 +35,28 @@ services:
           - user-service
     depends_on:
       - "config-server"
-      - "user-mysql"
+      - "mysql"
+      - "eureka-server"
+
+  notification-service:
+    image: yanzemin/notification-service:v0
+    container_name: notification-service
+    ports:
+      - "8082:8082"
+    networks:
+      main:
+        aliases:
+          - notification-service
+    depends_on:
+      - "config-server"
+      - "mysql"
       - "eureka-server"
 
   product-service:
-    image: product-service
+    image: yanzemin/product-service:v0
     container_name: product-service
-    volumes:
-      - $PWD/data:/var/lib/file
+    #    volumes:
+    #      - $PWD/data:/var/lib/file
     ports:
       - "8080:8080"
     networks:
@@ -56,30 +64,26 @@ services:
         aliases:
           - product-service
     depends_on:
-      - "config-server"
-      - "product-mysql"
       - "eureka-server"
+      - "config-server"
+      - "mysql"
       - "user-service"
 
   webapi-gateway:
-    image: webapi-gateway:V0
+    image: yanzemin/webapi-gateway:v0
     container_name: webapi-gateway
-    volumes:
-      - $PWD/data:/var/lib/file
     ports:
       - "9000:9000"
     networks:
       main:
         aliases:
-          - gateway
+          - webapi-gateway
     depends_on:
       - "eureka-server"
 
   config-server:
-    image: config-server
+    image: yanzemin/spring-cloud-config-server:v0
     container_name: config-server
-    volumes:
-      - $PWD/data:/var/lib/file
     ports:
       - "9006:9006"
     networks:
