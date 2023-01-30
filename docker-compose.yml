@@ -3,22 +3,26 @@ version: '3'
 services:
   mysql:
     image: mysql:8.0
+    restart: always
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: '123456'
+      MYSQL_USER: user
+      MYSQL_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: 123456
     networks:
       main:
         aliases:
           - mysql
     ports:
-      - '3306:3306'
-    privileged: true
+      - 3306:3306
+    command:
+      --default-authentication-plugin=mysql_native_password
 
   eureka-server:
     image: yanzemin/eureka:v0
     container_name: eureka
     ports:
-      - "8761:8761"
+      - '8761:8761'
     networks:
       main:
         aliases:
@@ -28,70 +32,68 @@ services:
     image: yanzemin/user-service:v0
     container_name: user-service
     ports:
-      - "8081:8081"
+      - '8081:8081'
     networks:
       main:
         aliases:
           - user-service
     depends_on:
-      - "config-server"
-      - "mysql"
-      - "eureka-server"
+      - config-server
+      - mysql
+      - eureka-server
 
   notification-service:
     image: yanzemin/notification-service:v0
     container_name: notification-service
     ports:
-      - "8082:8082"
+      - '8082:8082'
     networks:
       main:
         aliases:
           - notification-service
     depends_on:
-      - "config-server"
-      - "mysql"
-      - "eureka-server"
+      - config-server
+      - mysql
+      - eureka-server
 
   product-service:
     image: yanzemin/product-service:v0
     container_name: product-service
-    #    volumes:
-    #      - $PWD/data:/var/lib/file
     ports:
-      - "8080:8080"
+      - '8080:8080'
     networks:
       main:
         aliases:
           - product-service
     depends_on:
-      - "eureka-server"
-      - "config-server"
-      - "mysql"
-      - "user-service"
+      - eureka-server
+      - config-server
+      - mysql
+      - user-service
 
   webapi-gateway:
     image: yanzemin/webapi-gateway:v0
     container_name: webapi-gateway
     ports:
-      - "9000:9000"
+      - '9000:9000'
     networks:
       main:
         aliases:
           - webapi-gateway
     depends_on:
-      - "eureka-server"
+      - eureka-server
 
   config-server:
     image: yanzemin/spring-cloud-config-server:v0
     container_name: config-server
     ports:
-      - "9006:9006"
+      - '9006:9006'
     networks:
       main:
         aliases:
           - config-server
     depends_on:
-      - "eureka-server"
+      - eureka-server
 networks:
   main:
 
